@@ -18,7 +18,7 @@
   /Title (CS3223.pdf)
   /Creator (TeX)
   /Producer (pdfTeX 1.40.0)
-  /Author (Jovyn Tan)
+  /Author (Jovyn Tan, Jotham Wong)
   /Subject (CS3223)
 /Keywords (CS3223, nus,cheatsheet,pdf)}
 
@@ -87,146 +87,6 @@
   \end{center}
 
   \section{01. DBMS STORAGE}
-
-  \begin{itemize}
-    \item store data on non-volatile disk
-    \item process data in main memory (RAM) (\textit{volatile storage})
-  \end{itemize}  
-
-  \subsection{Magnetic HDD}
-
-  \includegraphics[width=0.9\linewidth]{cs3223-magnetic-hdd.png} 
-
-  \begin{itemize}
-    \item \textbf{disk access time} =
-      \begin{itemize}
-        \item \definition{seek time} move arms to position disk head on track 
-        \item \definition{rotational delay} wait for block to rotate under head
-          \begin{itemize}
-            \item average rotational delay = time for $\frac{1}{2}$ revolutions
-          \end{itemize}
-        \item \definition{transfer time} move data to/from disk surface
-          \\* $= \text{time for 1 revolution} \times \frac{ \text{\# of requested sectors on the same track} }{ \text{\# of sectors in track} } $
-      \end{itemize}
-    \item \textbf{response time} for disk access = queuing delay+access time
-  \end{itemize}
-
-  \includegraphics[width=0.15\linewidth]{cs3223-dbms-storage.png} 
-  \includegraphics[width=0.8\linewidth]{cs3223-access-time-example.png} 
-
-  \begin{itemize}
-    \item command processing time: interpreting access command by disk controller (part of access time, considered negligible)
-    \item small requests are dominated by seek time; large requests dominated by transfer time
-    \item \textbf{access order}:
-      \begin{enumerate}
-        \item contiguous blocks within the same track (same surface)
-        \item cylinder tracks within the same cylinder
-        \item next cylinder
-      \end{enumerate}
-  \end{itemize}
-
-  \subsection{SSD (Solid-State Drive)}
-
-  \begin{itemize}
-    \item no mechanical moving parts
-    \item advantages: $\checkmark$ significantly faster than HDD \\* $\checkmark$ higher data transfer rate $\checkmark$ lower power consumption
-    \item disadvantages: $\times$ update to a page requires erasure of multiple pages before overwriting page \\*
-      $\times$ limited number of times a page can be erased
-  \end{itemize} 
-
-  \subsection{Buffer Manager}
-
-  \begin{itemize}
-    \item data is stored \& retrieved in \textbf{disk blocks} (pages)
-      \begin{itemize}
-        \item each block = sequence of $\geq 1$ contiguous sectors
-      \end{itemize}
-    \item \textbf{buffer pool}: main memory allocated for DBMS
-      \begin{itemize}
-        \item partitioned into \ildefinition{frames} (block-sized pages)
-      \end{itemize}
-    \item \textbf{\texttt{pin count}}: number of clients using page (initialised 0)
-      \begin{itemize}
-        \item >0 $\Rightarrow$ page is utilised by some transaction; don't replace
-      \end{itemize}
-    \item \textbf{\texttt{dirty} flag}: initialised false
-      \begin{itemize}
-        \item \definition{dirty} page is modified \& not updated on the disk
-        \item dirty page must be written back to the disk if the transaction has committed
-      \end{itemize}
-  \end{itemize}
-
-  \includegraphics[width=0.95\linewidth]{cs3223-buffer-manager-request-handling.png} 
-
-  \attention unpinning: update dirty flag to true if page is dirty
-
-  \subsubsection{replacement policies}
-
-  \begin{itemize}
-    \item decide which unpinned (\texttt{pinCount==0}) page to replace
-    \item \textbf{LRU} uses a queue of pointers to frames with \texttt{pinCount==0}
-    \item \textbf{clock}: cheaper than LRU, used in postgres
-      \begin{itemize}
-        \item \texttt{referenced bit} - turns on when \texttt{pinCount==0}
-        \item replace page with referenced bit off \texttt{\&\& pinCount==0}
-      \end{itemize}
-      \includegraphics[width=0.85\linewidth]{cs3223-clock-replacement-policy.png} 
-  \end{itemize}
-
-  \subsection{File abstraction}
-
-  \begin{itemize}
-    \item each relation is a file of records
-    \item each record has a unique record identifier, \ildefinition{RID}
-    \item \definition{heap file} unordered file
-      \begin{itemize}
-        \item vs sorted/hashed file: records are ordered/hashed
-      \end{itemize}
-  \end{itemize}
-
-  \subsubsection{heap file implementations}
-
-  \begin{itemize}
-    \item \textbf{linked list} implementation
-      \begin{itemize}
-        \item header page: metadata about the file
-          \includegraphics[width=0.75\linewidth]{cs3223-file-linked-list.png} 
-      \end{itemize}
-    \item \textbf{page directory} implementation: more efficient
-      \begin{itemize}
-        \item maintain directory structure with one entry per page 
-          \begin{itemize}
-            \item stores address of and amount of free space on page
-          \end{itemize}
-        \item insertion: scan directory to find page with enough space to store the new record
-        \item insertion worst case: scan number of pages + data page itself (vs LL worst case: entire list)
-          \includegraphics[width=0.6\linewidth]{cs3223-file-page-directory.png} 
-      \end{itemize}
-  \end{itemize}
-
-  \subsection{Page Formats}
-
-  \begin{itemize}
-    \item \texttt{RID} = (page ID, slot number)
-    \item \textbf{fixed-length} records
-      \begin{itemize}
-        \item packed organisation: inefficient deletion (transferring last record to deleted record changes RID of record)
-      \end{itemize}
-    \item \textbf{variable-length} records: \textbf{slotted page organisation}
-  \end{itemize}
-
-  \includegraphics[width=0.3\linewidth]{cs3223-packed-organisation.png} 
-  \includegraphics[width=0.2\linewidth]{cs3223-unpacked-organisation.png} 
-  \includegraphics[width=0.46\linewidth]{cs3223-slotted-page-organisation.png} 
-
-  \subsubsection{Record formats}
-
-  \begin{itemize}
-    \item \textbf{fixed-length} records: store consecutively
-    \item \textbf{variable-length} records:
-      \includegraphics[width=0.7\linewidth]{cs3223-variable-length-records.png}
-  \end{itemize}
-
   \subsubsection{Data entry formats}
 
   \begin{enumerate}
@@ -236,158 +96,6 @@
   \end{enumerate}
 
   \section{02. TREE-BASED INDEXING}
-
-  \begin{itemize}
-    \item \definition{search key} sequence of $k$ data attributes, $k \geq 1$ 
-      \begin{itemize}
-        \item \definition{composite search key} if $k > 1$
-      \end{itemize}
-    \item \definition{unique index} search key is a candidate key
-    \item \definition{clustered index} order of data entries $\approx$ order of records
-      \begin{itemize}
-        \item \textbf{Format-1} is \textit{always clustered}
-        \item \textit{at most one} clustered index for each relation
-      \end{itemize}
-    \item \definition{dense index} there is an index record for every search key value in the data. \textit{unclustered index} must be dense
-  \end{itemize}
-
-
-  \subsection{B$^+$-tree Index}
-
-  \begin{itemize}
-    \item leaf nodes: sorted data entries ($k^*$ is of form \texttt{(k, RID)})
-    \item internal nodes: stores index entries $(p_0, k_1, p_1, \dots, p_n)$ for $k_1 < k_2 \dots <k_n$ where $p_i$ is the page disk address
-      \begin{itemize}
-        \item each $(k_i, p_i)$ is an \textbf{index entry}
-        \item for $k*$ in index subtree $T_i$ rooted at $p_i$, $k \in [k_i, k_{i+1}]$
-      \end{itemize}
-    \item \ildefinition{order} of index tree, $d \in \mathbb{Z}^+$
-      \begin{enumerate}
-        \item each non-root node contains $m$ entries, $m \in [d, 2d]$
-        \item root node contains $[1, 2d]$ entries
-      \end{enumerate}
-    \item \textbf{equality search}: at each internal node $N$, find the largest $k_i$ s.t. $k \geq k_i$. search subtree at $p_i$ if $k_i$ exists, else $p_0$ 
-    \item \textbf{range search}: find first matching record; traverse doubly LL
-      \includegraphics[width=0.9\linewidth]{cs3223-b-tree.png} 
-  \end{itemize}
-
-  \textbf{insertion: splitting}
-  \begin{itemize}
-    \item splitting leaf node: distribute $d+1$ entries to a new leaf node
-    \item if parent overflows: push the middle (d+1) key up to parent
-    \item root node overflows: create new root (parent of current root)
-  \end{itemize}
-
-  \textbf{insertion: redistribution} (of \textit{leaf nodes only})
-  \begin{itemize}
-    \item try right sibling first, then left sibling, else use splitting
-    \item \definition{sibling} two nodes at the \textit{same level} \& \textit{same parent node}
-  \end{itemize}
-
-  \textbf{deletion: redistribution} - try right sibling, then left, else merge
-
-  \textbf{deletion: merging} (siblings have $d$ entries) - try right first 
-  \begin{itemize}
-    \item if leaf underflows: delete parent key, combine with sibling
-    \item if internal node underflows: pull down its index entry in parent, combine with sibling, push a key back up
-      \begin{itemize}
-        \item becomes the new root if parent is root \& becomes empty
-      \end{itemize}
-  \end{itemize}
-
-  \subsection{Bulk Loading a B$^+$-tree}
-
-  \begin{enumerate}
-    \item sort data entries by search key and store sequentially
-    \item construct leaf pages with $2d$ entries
-    \item construct internal pages by attempting to insert leaf pages into rightmost parent page
-  \end{enumerate}
-
-  \section{03. HASH-BASED INDEXING}
-
-  \subsection{Static Hashing}
-
-  \begin{itemize}
-    \item hash record to $B_i \in B_0, \dots, B_{N-1}$ with $i = h(k)mod\, N$
-    \item when full, reconstruct hash table with more buckets
-  \end{itemize}
-  \begin{minipage}[c]{0.55\linewidth}
-    \includegraphics[width=0.95\linewidth]{cs3223-hash-bucket-pages.png} 
-  \end{minipage}
-  \begin{minipage}[c]{0.42\linewidth}
-    each bucket:
-    \begin{itemize}
-      \item 1 primary data page
-      \item $\geq 0$ overflow data pages
-    \end{itemize}
-  \end{minipage}
-
-  \subsection{Linear Hashing (Dynamic)}
-
-  \begin{itemize}
-    \item grows \textbf{linearly}: split when some \textbf{bucket overflows}
-    \item how to split bucket $B_i$ : 
-      \begin{enumerate}
-        \item add a new bucket $B_j = B_{i+N_i}$ (\textit{split image} of $B_i$)
-        \item redistribute entries in $B_i$ between $B_i$ and $B_j$
-        \item \texttt{next++}; if next==$N_{level}$: \texttt{level++; next=0}
-      \end{enumerate}
-    \item file size at the beginning of round $i$, $N_i = 2^iN_0$
-    \item at round $i$, hash $x$ = $B_x$ has been split ? $h_i(k)$ : $h_{i+1}(k)$
-  \end{itemize}
-  \begin{minipage}[c]{0.6\linewidth}{\textcolor{black}{
-        \begin{itemize}
-          \item \textbf{performance}: 1 disk I/O \\* (no overflow pages)
-            \begin{itemize}
-              \item avg 1.2 I/Os (uniform distribn), worst case linear I/O cost
-            \end{itemize}
-          \item removing bucket (\textbf{deletion}): 
-            \begin{itemize}
-              \item if next $>$ 0: \texttt{next-{}-;}
-              \item else: \texttt{next=}(prev level last bucket); \texttt{level-{}-;}
-            \end{itemize}
-        \end{itemize}
-    }}
-  \end{minipage}
-  \begin{minipage}[c]{0.37\linewidth}
-    \includegraphics[width=0.95\linewidth]{cs3223-linear-hashing.png} 
-  \end{minipage}
-
-  \subsection{Extendible Hashing (Dynamic)}
-
-  \begin{itemize}
-    \item add a new bucket whenever existing bucket overflows 
-      \begin{itemize}
-        \item no overflow pages unless \# collisions > page capacity 
-      \end{itemize}
-    \item directory of pointers to buckets - $2^d$ entries ($b_db_{d-1}\dots b_1$)
-      \begin{itemize}
-        \item $d=$ \ildefinition{global depth} of hashed file
-      \end{itemize}
-    \item \ildefinition{corresponding} directory entries differ only in the $d^{th}$ bit
-    \item entries in a bucket of \ildefinition{local depth} $\ell \in [0,d]$: same last $\ell$ bits
-      \begin{itemize}
-        \item a split bucket \& its image have the \textit{same local depth}
-      \end{itemize}
-    \item number of directory entries pointing to a bucket = $2^{d-\ell}$
-      \includegraphics[width=0.95\linewidth]{cs3223-extendible-hashing.png} 
-    \item splitting bucket: $\ell$\texttt{++} (repeat until no more overflow)
-      \begin{itemize}
-        \item if $\ell = d$: directory doubles; $\quad d$\texttt{++}
-        \item else $\ell < d$: redistribute and increment $\ell$
-      \end{itemize}
-    \item deletion: if bucket $B_i$ becomes empty,
-      \begin{itemize}
-        \item deallocate $B_i$ and decrement $\ell$\texttt{-{}-} for split image $B_j$
-        \item if each pair of corresponding entries point to the same bucket, the directory can be halved
-      \end{itemize}
-    \item \textbf{performance}: at most 2 disk I/Os (for equality query)
-    \item collisions: when 2 data entries have the same hashed value
-      \begin{itemize}
-        \item use \textbf{overflow pages} if \# collisions exceeds page capacity
-      \end{itemize}
-  \end{itemize}
-
   \section{04.1 SORTING}
 
   \subsection{External Merge Sort}
@@ -721,13 +429,201 @@
       \end{itemize}
   \end{itemize}
 
+  \section{07. Transaction}
+
+  \begin{itemize}
+    \item An active Xact is a Xact still in progress
+    \item \textbf{Schedule} = A list of actions from a set of Xacts where the order of the actions within each Xact is preserved
+    \item \textbf{Serial Schedule} = A schedule where the actions of Xacts are not interleaved
+    \item We say that \textbf{$T_j$ reads O from $T_i$} in a schedule S if the last write on O before $R_j(O)$ in S is $W_i(O)$ 
+    \item We say that $T_j$ reads $T_i$ if $T_j$ has read some object from $T_i$ 
+    \item We say that $T_i$ performs the final write on $O$ in a schedule S if the last write on O is $W_i(O)$
+    \item An interleaved Xact schedule is \textbf{correct} if it is "equivalent" to some serial schedule over the set of Xacts 
+  \end{itemize}
+
+  \subsection{View Serializable Schedules (VS)}
+  
+  Two schedules $S$ and $S'$ (over the same set of Xacts) are \textbf{view equivalent} denoted by $S \equiv_v S'$ if they satisfy:
+
+  \begin{enumerate}
+    \item If $T_i$ reads $A$ from $T_j$ in S, then $T_i$ must also read $A$ from $T_j$ in $S'$
+    \item For each data object $A$, the Xact (if any) that performs the final write on $A$ in $S$ must also perform the final write on $A$ in $S'$
+  \end{enumerate}
+
+  A schedule S is a \textbf{view serializable schedule (VS)} if S is view equivalent to some serial schedule over the same set of Xacts
+
+  \subsection{Anomalies due to interleaved schedules}
+  Two actions on the same object \textbf{conflict} if
+  
+  \begin{enumerate}
+    \item at least one is a write action,
+    \item the actions are from different Xacts 
+  \end{enumerate}
+
+  The following are anomalies:
+  
+  \begin{enumerate}
+    \item Dirty read (due to WR conflicts)
+    \begin{itemize}
+      \item $T_2$ reads O modified by $T_1$ and $T_1$ has not yet committed.
+      \item $W_1(x), R_2(x)$
+      \item $T_2$ can see an inconsistent DB state 
+    \end{itemize}
+    \item Unrepeatable read (due to RW conflicts)
+    \begin{itemize}
+      \item $T_2$ updates O that $T_1$ reads and $T_2$ commits while $T_1$ is still in progress
+      \item $R_1(x), W_2(x), \text{Commit}_2, R_1(x)$
+      \item $T_1$ can get a different value if it reads O again
+    \end{itemize} 
+    \item Lost update (due to WW conflicts)
+    \begin{itemize}
+      \item $T_2$ overwrites O that was modified by $T_1$ while $T_1$ is still in progress
+      \item $R_1(x), R_2(x), W_1(x), W_2(x)$
+      \item $T_1$'s update is lost
+    \end{itemize}
+    \item Phantom read
+    \begin{itemize}
+      \item T re-executes a query on a predicate and gets a different set of results due to a recently commited T.
+      \item Can be prevented by \textbf{predicate locking}: Grant T an S on p, another T' request for X on p is blocked. Also see \textbf{index locking}
+    \end{itemize}
+  \end{enumerate}
+
+  \subsection{Conflict Serializable (CS)}
+  \begin{itemize}
+    \item \textbf{conflict equivalent} denoted by $S \equiv_c S'$ if they order every pair of conflicting actions of two \textbf{committed} Xacts in the same way.
+    \item \textbf{conflict serializable schedule (CS)} if it is conflict equivalent to a serial schedule over the same set of Xacts.
+    \item \textbf{Conflict serializability graph} denoted as $\text{CSG(S)} = (V, E)$ s.t
+    \begin{itemize}
+      \item $V$ contains a node for each committed Xact in $S$
+      \item $E$ contains $T_i, T_j$ if an action in $T_i$ precedes and conflicts with one of $T_j$'s action.
+    \end{itemize}
+    \item \textbf{Theorem}: A schedule is \textbf{CS} iff its $\text{CSG}$ is acyclic.
+    \item \textbf{Theorem}: If S is \textbf{CS}, then S is also \textbf{VS}.
+    \item \textbf{Note}: CS3223 uses \textbf{serializable} to mean \textbf{CS}
+    \item A write on O by $T_i$ is a \textbf{blind write} if $T_i$ did not read O prior to the write
+    \item \textbf{Theorem}: If S is \textbf{VS} and S has no blind writes, then S is also \textbf{CS}.
+  \end{itemize}
+
+  \subsection{Recovery}
+  \begin{itemize}
+    \item \textbf{Cascading abort}: For correctness, if $T_i$ read from $T_j$ then $T_i$ must abort if $T_j$ aborts. We say that $T_j$'s abort is cascaded to $T_i$.
+    \item \textbf{Recoverable schedule}: For every Xact T that commits in S, $T$ must commit after $T'$ if $T$ reads from $T'$.
+    \item Recoverable schedules guarantee that committed Xacts will not be aborted but cascading aborts of active Xacts are possible.
+    \item \textbf{Cascadeless schedule}: If whenever $T_i$ reads from $T_j$ in S, $\text{Commit}_j$ must precede this read action.
+    \item \textbf{Theorem}: A cascadeless schedule is recoverable.
+    \item \textbf{Before-images}: Log the before-images of writes to undo the aborted Xacts. See Chap 10. But this does not always work.
+    \begin{itemize}
+      \item $W_1(A), W_2(A), \text{Abort}_1$. Undoing $W_1(A)$ is incorrect.
+    \end{itemize} 
+    \item \textbf{Strict}: For every $W_i(O)$ in S, O is not read or written by another Xact until $T_i$ either aborts or commits.
+    \begin{itemize}
+      \item Recovery using before-images is more efficient.
+      \item Concurrent executions are more restrictive.
+    \end{itemize}
+    \item \textbf{Theorem}: $\text{Strict} \subsetneq \text{Cascadeless} \subsetneq \text{Recoverable}$.
+  \end{itemize}
+
+  \section{08. Concurrency Control}
+  \subsection{Transaction Scheduler}
+  For each input action (R, W, C, A) to the scheduler, 
+  \begin{itemize}
+    \item output action to S
+    \item Postpone action by blocking Xact
+    \item Reject action and abort Xact
+  \end{itemize}
+
+  \subsection{Lock-Based concurrency control}
+  \includegraphics[width=0.4\linewidth]{cs3223-lock-matrix.png}
+  \begin{enumerate}
+    \item If lock request not granted, T becomes \textbf{blocked}, execution is suspended and T is added to O's request queue.
+    \item When a lock on O is released, lock manager checks request of first T in request queue for O. If can be granted, T acquires lock on O and resumes after popped from queue.
+    \item When an Xact commits/aborts, all locks are released and T is removed from any request queue it's in.
+    \item $S_i(O):$ Xact $T_i$ requests S on O
+    \item $X_i(O):$ Xact $T_i$ requests X on O
+    \item $U_i(O):$ Xact $T_i$ releases lock on O
+  \end{enumerate}
+
+  \subsection{Two Phase Locking (2PL) Protocol}
+  \begin{enumerate}
+    \item To read O, T must hold S or X on O.
+    \item To write O, T must hold X on O.
+    \item Once T releases a lock, T cannot request anymore.
+    \item 2PL = growing and shrinking phase.
+    \item \textbf{Theorem:} 2PL S are CS.
+  \end{enumerate}
+  \subsection{Strict 2PL}
+  \begin{itemize}
+    \item Same as 2PL points 1 and 2.
+    \item T must hold onto locks until T commits or aborts.
+    \item \textbf{Theorem:} Strict 2PL S are strict and CS.
+  \end{itemize}
+
+  \subsection{Lock Management}
+  \textbf{Deadlock}: cycle of T waiting for locks to be released by each other.
+  \subsection{Deadlock Detection}
+  \begin{itemize}
+    \item \textbf{Waits-for graph (WFG)}
+    \begin{itemize}
+      \item Nodes represent active T.
+      \item Add edge $T_i \rightarrow T_j$ if $T_i$ waiting for $T_j$ to release lock.
+      \item Remove edge when lock request is granted.
+    \end{itemize}
+    \item Deadlock detected if WFG has a cycle.
+    \item Break deadlock by aborting a T in the cycle.
+    \item Alternative: timeout.
+  \end{itemize}
+
+  \subsection{Deadlock Prevention}
+  \begin{itemize}
+    \item Older T have higher priority than younger T
+    \begin{itemize}
+      \item Each T is assigned timestamp when started. 
+      \item Older T has a smaller timestamp.
+    \end{itemize}
+    \item Suppose $T_i$ requests for a lock that conflicts with a lock held by $T_j$
+    \item \includegraphics[width=0.19\textwidth]{cs3223-deadlock-prevention.png}
+    \item Wait-die policy
+    \begin{itemize}
+      \item non-preemptive: only requesting T can be aborted
+      \item younger T may abort repeatedly
+      \item T that has all locks is never aborted
+    \end{itemize}
+    \item Wound-wait policy is preemptive
+    \item To avoid starvation, a restarted T must use original timestamp
+  \end{itemize}
+
+  \subsection{Lock Conversion}
+  Increases concurrency by allowing lock conversions, previously serial only schedules can become interleaved.
+  \begin{itemize}
+    \item $\text{UG}_i(A):$ $T_i$ upgrades S on A to X.
+    \begin{itemize}
+      \item Blocked if another T is holding S on A.
+      \item Allowed if $T_i$ has not released any lock.
+    \end{itemize}
+    \item $\text{DG}_i(A):$ $T_i$ downgrades X on A to S.
+    \begin{itemize}
+      \item Allowed if $T_i$ has not modified A and $T_i$ has not released any lock.
+    \end{itemize}
+  \end{itemize}
+
+  \subsection{Lock-based Isolation levels}
+  \includegraphics[width=0.20\textwidth]{cs3223-isolation-level.png}
+  \begin{itemize}
+    \item \textbf{Short duration} lock acquired for an operation can be released after operation ends before T commits/abort
+    \item \textbf{Long duration} lock acquired for an operation is held until T commits/abort
+  \end{itemize}
+
+  \subsection{Lock Granularity}
+  \begin{itemize}
+    \item Highest(coarsest) to lowest(finest): db, relation, page, tuple
+    \item If T holds M on D, T implicitly holds M on granules finer than D.
+    \item \textbf{Protocol}: Before acquiring S/X on G, acquire IS/IX on granules coarser than G top-down. Release locks bottom-up.
+  \end{itemize}
+  
   \section{NOTATION}
 
+
   \includegraphics[width=0.97\linewidth]{cs3223-notation.png} 
-
-
-
-
 
 
 \end{multicols*}
