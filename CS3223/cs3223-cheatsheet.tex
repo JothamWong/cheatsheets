@@ -1,4 +1,4 @@
-\documentclass[10pt, landscape]{article}
+\documentclass[9pt, landscape]{extarticle}
 \usepackage[scaled=0.92]{helvet}
 \usepackage{calc}
 \usepackage{multicol}
@@ -94,8 +94,6 @@
     \item k* is of the form \textbf{(k, RID)} - fixed length \texttt{(k, \textbf{$\bullet$})}
     \item k* is of the form \textbf{(k, RID-list)} - e.g. (k, \{RID11, RID12\})
   \end{enumerate}
-
-  \section{02. TREE-BASED INDEXING}
   \section{04.1 SORTING}
 
   \subsection{External Merge Sort}
@@ -429,6 +427,142 @@
       \end{itemize}
   \end{itemize}
 
+  \section{06. Query Evaluation \& Optimization}
+
+  \begin{itemize}
+    \item Set operations can be implemented with joins and sort/hash
+    \begin{itemize}
+      \item $R(A, B) \cap S(A, B) = \pi_{R.A, R.B} R \bowtie_{p} S$
+      \item where p = (R.A = S.A) $\wedge$ (R.B = S.B)
+    \end{itemize}
+    \item Sorting for $R \cup S$
+    \begin{itemize}
+      \item Sort R and S using all attributes. Merge the sorted operands.
+    \end{itemize}
+    \item Hashing for $R \cup S$
+    \begin{itemize}
+      \item Same as grace hash join, k partitions, when probing, discard if in, else add. Write to disk.
+    \end{itemize}
+    \item Aggregation: maintain running info while scanning table.
+    \begin{itemize}
+      \item Use index scan on covering index whenever possible.
+    \end{itemize}
+    \item Group by: Partition by grp attr and run normal aggregation.
+  \end{itemize}
+
+  \textbf{Query Evaluation}
+
+  \begin{itemize}
+    \item Materialized evaluation
+    \begin{itemize}
+      \item Evaluate operator only when all operands are evaluated or materialized.
+      \item Intermediate results are written to disk which can be costly.
+    \end{itemize}
+    \item Pipelined evaluation
+    \begin{itemize}
+      \item Execution of operators is interleaved. Pipelining may not always be possible. 
+      \item Temporary relations are not stored on disk.
+      \item Output produced by operator is passed directly to parent.
+      \item \textbf{Blocking operator} O cannot start until all receive all input tuples from children operators
+      \item Examples are external merge sort, smj, grace hash.
+      \item Use \textbf{partial materialization} cheaper to read from temp output relation (due to very selective p)
+      \item Iterator interface.
+      \begin{itemize}
+        \item \textbf{open}: initialize iterator state: resources, args.
+        \item \textbf{getNext}: gen next tuple, return null when done
+        \item \textbf{close}: Deallocate state information
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+  
+  \textbf{Query Planning}
+
+  \begin{itemize}
+    \item A SQL query has many equiv logical plans, which have many equiv physical plans
+    \item Query optimization is about avoiding the worst plans, not picking the best
+    \item Relational Algebra Equiv rules
+    \begin{enumerate}
+      \item Commutativity of binary ops
+      \begin{enumerate}
+        \item $R \times S \equiv S \times R$
+        \item $R \bowtie S \equiv S \bowtie R$ 
+      \end{enumerate}
+      \item Associativity of binary ops
+      \begin{enumerate}
+        \item $(R \times S) \times T \equiv R \times (S \times T)$
+        \item $(R \bowtie S) \bowtie T \equiv R \bowtie (S \bowtie T)$
+      \end{enumerate}
+      \item Idempotence of unary op
+      \begin{enumerate}
+        \item $\pi_{L'}(\pi_{L}(R)) \equiv \pi_{L'}(R)$ if $L' \subseteq L \subseteq attr(R)$
+        \item $\sigma_{p1}(\sigma_{p2}(R)) \equiv \sigma_{p1 \wedge p2}(R)$
+      \end{enumerate}
+      \item Commutating selection with projection
+      \begin{enumerate}
+        \item $\pi_L(\sigma_p(R)) \equiv \pi_L(\sigma_p(\pi_{L \cup attr(p)}(R)))$
+      \end{enumerate}
+      \item Commutating selection with binary ops
+      \begin{enumerate}
+        \item $\sigma_p(R \times S) \equiv \sigma_p(R) \times S$
+        \item $\sigma_p(R \bowtie_{p'} S) \equiv \sigma_p(R) \bowtie_{p'} S$
+        \item assuming $attr(p) \subseteq attr(R)$
+        \item $\sigma_p(R \cup S) \equiv \sigma_p(R) \cup \sigma_p(S)$
+      \end{enumerate}
+      \item Commutating proj with binary ops\\Let $L = L_R \cup L_S$ where $L_R \subseteq attr(R), L_S \subseteq attr(S)$
+      \begin{enumerate}
+        \item $\pi_L(R \times S) \equiv \pi_{L_R}(R) \times \pi_{L_S}(S)$
+        \item $\pi_L(R \bowtie_p S) \equiv \pi_{L_R}(R) \bowtie_p \pi_{L_S}(S)$\\if attr(p) $\cap$ attr(R) $\subseteq$ $L_R$ and attr(p) $\cap$ attr(S) $\subseteq$ $L_S$ 
+        \item $\pi_L(R \cup S) \equiv \pi_L (R) \cup \pi_L (S)$
+      \end{enumerate}
+    \end{enumerate}
+    \item Summary of RA optimization
+    \begin{enumerate}
+      \item Perform selection as early as possible, ideally before joins.
+      \item Replace Cartesian Product by join whenever possible
+      \item Project out useless attributes early
+      \item If there are several joins, perform most restrictive join first.
+    \end{enumerate}
+    \item Types of Query Plan Trees
+    \begin{itemize}
+      \item A query plan is \textbf{linear} if at least one operand for each join op is a base relation, else it is \textbf{bushy}
+      \item A linear plan is \textbf{left-deep} if every right operand is a base relation
+      \item A linear plan is \textbf{right-deep} if every left operand is a base relation
+    \end{itemize}  
+    \item Query plan enumeration, assume that optimal sol to smaller set is optimal sol to larger set. may not be true.
+    \item \includegraphics[width=0.18\textwidth]{cs3223-query-enumeration-algo.png}
+    \item System R optimizer
+    \begin{itemize}
+      \item Enumerate only left-deep query plans. (too much to search o/w)
+      \item Avoid cross-product query plans.
+      \item Consider early selections and projections.
+      \item Uses $dp(S_i, o_i)$ where $o_i$ is null if unordered or a sequence of attrs
+      \item May be cheaper if a SMJ is sorted on some sequence even if by itself is suboptimal. 
+    \end{itemize}
+    \item Cost estimation
+    \begin{itemize}
+      \item Uniformity assumption: uniform distribution
+      \item Independence assumption: diff attrs are independent
+      \item Inclusion assumption: For $R \bowtie_{R.A = S.B} S$, if $\lVert{\pi_A (R)}\lVert \leq \lVert{\pi_B (S)}\lVert$ then $\pi_A (R) \subseteq \pi_B(S)$
+    \end{itemize}
+    \item \textbf{Size estimation}: $\lVert q \lVert \approx \lVert e \lVert \times \prod_{i=1}^{n}rf(t_i)$
+    \begin{itemize}
+      \item $rf(t_i) = \frac{\lVert \sigma_i(e)\lVert}{\lVert e \lVert}$, reduction/selectivity factor
+      \item $rf(R=c) = \frac{\lVert c \lVert}{\lVert R \lVert}$ uniformity assumption
+    \end{itemize}
+    \item \textbf{Join selectivity}: $rf(R.A = S.B) = \frac{\lVert R \bowtie_{R.A = S.B} \lVert}{\lVert R \lVert \times \lVert S \lVert}$
+    \begin{itemize}
+      \item Inclusion assumption: Assume that $\lVert \pi_A(R) \lVert \leq \lVert \pi_B(S) \lVert$
+      \item By uniformity assumption, every R-tuple joins with $\frac{\lVert S \lVert}{\lVert \pi_B(S) \lVert}$
+      \item $\therefore rf(R.A = S.B) \approx \frac{1}{\max(\lVert \pi_A(R) \lVert, \lVert \pi_B(S) \lVert)}$ 
+    \end{itemize}
+    \item Using histograms. Partition domain into sub-ranges (\textbf{buckets}) and assume uniform value distribution within each bucket.
+    \begin{itemize}
+      \item \textbf{Equiwidth}: Each bucket has almost equal num values
+      \item \textbf{Equidepth}: Each bucket has almost equal num tuples, sub-range of adj buckets can overlap
+      \item \textbf{MCV}: Keep track of exact top-k common values and exclude from buckets 
+    \end{itemize}
+  \end{itemize}
+
   \section{07. Transaction}
 
   \begin{itemize}
@@ -498,7 +632,7 @@
       \item $E$ contains $T_i, T_j$ if an action in $T_i$ precedes and conflicts with one of $T_j$'s action.
     \end{itemize}
     \item \textbf{Theorem}: A schedule is \textbf{CS} iff its $\text{CSG}$ is acyclic.
-    \item \textbf{Theorem}: If S is \textbf{CS}, then S is also \textbf{VS}.
+    \item \textbf{Theorem}: $CSS \subsetneq VSS \subsetneq MVSS$.
     \item \textbf{Note}: CS3223 uses \textbf{serializable} to mean \textbf{CS}
     \item A write on O by $T_i$ is a \textbf{blind write} if $T_i$ did not read O prior to the write
     \item \textbf{Theorem}: If S is \textbf{VS} and S has no blind writes, then S is also \textbf{CS}.
@@ -532,7 +666,7 @@
     \item Reject action and abort Xact
   \end{itemize}
 
-  \subsection{Lock-Based concurrency control}
+  \textbf{Lock-Based concurrency control}
   \includegraphics[width=0.4\linewidth]{cs3223-lock-matrix.png}
   \begin{enumerate}
     \item If lock request not granted, T becomes \textbf{blocked}, execution is suspended and T is added to O's request queue.
@@ -543,7 +677,7 @@
     \item $U_i(O):$ Xact $T_i$ releases lock on O
   \end{enumerate}
 
-  \subsection{Two Phase Locking (2PL) Protocol}
+  \textbf{Two Phase Locking (2PL) Protocol}
   \begin{enumerate}
     \item To read O, T must hold S or X on O.
     \item To write O, T must hold X on O.
@@ -551,14 +685,15 @@
     \item 2PL = growing and shrinking phase.
     \item \textbf{Theorem:} 2PL S are CS.
   \end{enumerate}
-  \subsection{Strict 2PL}
+
+  \textbf{Strict 2PL}
   \begin{itemize}
     \item Same as 2PL points 1 and 2.
     \item T must hold onto locks until T commits or aborts.
     \item \textbf{Theorem:} Strict 2PL S are strict and CS.
   \end{itemize}
 
-  \subsection{Lock Management}
+  \textbf{Lock Management}
   \textbf{Deadlock}: cycle of T waiting for locks to be released by each other.
   \subsection{Deadlock Detection}
   \begin{itemize}
@@ -613,12 +748,118 @@
     \item \textbf{Long duration} lock acquired for an operation is held until T commits/abort
   \end{itemize}
 
-  \subsection{Lock Granularity}
+  \textbf{Lock Granularity}
   \begin{itemize}
     \item Highest(coarsest) to lowest(finest): db, relation, page, tuple
     \item If T holds M on D, T implicitly holds M on granules finer than D.
     \item \textbf{Protocol}: Before acquiring S/X on G, acquire IS/IX on granules coarser than G top-down. Release locks bottom-up.
   \end{itemize}
+
+  \section{09. MVCC}
+  \begin{itemize}
+    \item $W_i(O_i): $ create new version of O denoted by $O_i$. $O_0$ is initial version.
+    \item $R_i(O_j): $ read an appropriate version of O
+    \item Read-only T not blocked by update T and vice versa
+    \item Read-only T never aborted
+  \end{itemize}
+
+  \subsection{Multiversion Schedule}
+  \begin{itemize}
+    \item \textbf{Multiversion view equivalent (MVE)} denoted by $S \equiv_{mv} S'$ if they have the same set of reads-from.
+    \item $R_i(x_j)$ occurs in S iff $R_i(x_j)$ also occurs in S'
+    \item \textbf{Monoversion schedule}: each read in S returns most recently created version. Also can be serial.
+    \item \textbf{Multiversion view serializable s (MVSS)}: a S where there exists a serial monoversion S' that is MVE to S.
+    \item To show not MVSS, suppose there exists a S' and show that there is a cycle in the precede graph.
+  \end{itemize}
+
+  \subsection{MVCC Protocol: Snapshot Isolation (SI)}
+  \begin{itemize}
+    \item Each T has two timestamps $start(T)$ and $commit(T)$
+    \item Each T sees a snapshot of DB that consists of updates by T' that committed before T starts
+    \item T and T' are \textbf{concurrent} if they overlap
+    \item $O_i$ is a \textbf{newer version} compared to $O_j$ if $\text{commit}(T_i) > \text{commit}(T_j)$
+    \item If $R_i(O)$ returns $O_j$ then (either own update or latest version of O created by T that committed before $T_i$ starts)
+    \begin{itemize}
+      \item $j = i$ if $W_i(O)$ precedes $R_i(O)$ OR
+      \item $\text{commit}(T_j) < \text{start}(T_i)$
+      \item For every $T_k$, $k \neq j$, that has created a version $O_k$ of O if $\text{commit}(T_k) < \text{start}(T_i) \text{then} \text{commit}(T_k) < \text{commit}(T_j)$ 
+    \end{itemize}
+    \item \textbf{Concurrent update property:} If multiple concurrent T updated same O, only one T allowed to commit. If not, S may not be serializable.
+    \item \textbf{First Committer Wins (FCW)}: Before committing T, if another committed concurrent T' that has updated some O that T has updated exists, abort T. Else commit T.
+    \item \textbf{First Updater Wins (FUW)}: When T needs to update O, T requests for X. If X is not held by another concurrent T'
+    \begin{itemize}
+      \item T is granted X on O. If O has been updated by any concurrent T'', T aborts. Otherwise T proceeds.
+    \end{itemize}
+    \item Else if X is held by some concurrent T', T waits until T' aborts or commits.
+    \begin{itemize}
+      \item If T' aborts, then assume T is granted X on O. If O has been updated by any concurrent T'', T aborts. Otherwise T proceeds.
+      \item If T' commits, then T is aborted.
+    \end{itemize}
+    \item When T commits/aborts, releases its X-lock(s).
+    \item \textbf{Garbage collection} A version $O_i$ may be deleted if there exists a newer version $O_j$ commit($T_i$) $<$ commit($T_j$) s.t for every \textbf{active} $T_k$ that started after $T_i$ committed, we have commit($T_j$) $<$ start($T_k$)
+    \item SI has similar performance to Read Committed but SI does not suffer from lost update or unrepeatable reads.
+    \item But SI is vulnerable to non-serializable executions such as \textbf{write-skew anomaly} (left pic) and \textbf{read-only txn anomaly} (right pic). Both pics are SI S that isnt MVSS
+    \item SI also does not guarantee serializability.
+    \item \includegraphics[width=0.4\linewidth]{cs3223-write-skew-anomaly.png} \includegraphics[width=0.4\linewidth]{cs3223-read-only-txn-anomaly.png}
+  \end{itemize}
+
+  \subsection{Serializable Snapshot Isolation (SSI)}
+  \begin{itemize}
+    \item Stronger protocol that guarantees serializable SI schedules.
+    \item Transactional dependencies
+    \begin{itemize}
+      \item $T_1 \dashrightarrow_{ww} T_2$: $T_1$ writes a version of x. $T_2$ later writes \textbf{immediate successor} of x.
+      \item $T_1 \dashrightarrow_{wr} T_2$: $T_1$ writes a version of x. $T_2$ later reads this version of x.
+      \item $T_1 \dashrightarrow_{rw} T_2$: $T_1$ reads a version of x. $T_2$ later writes \textbf{immediate successor} of x.
+      \item $x_j$ is the \textbf{immediate successor} of $x_i$ if $T_i$ commits before $T_j$ and no txn that commits between $T_i$'s and $T_j$'s commits produces x.
+    \end{itemize}
+    \item Maintain a Dependency Serializable Graph (DSG) to keep track of \textbf{rw dependencies} among concurrent T
+    \item DSG(S) = (V, E), V = \{$T_1, \dots, T_k$\} and E
+    \item $\dashrightarrow$ concurrent txn
+    \item $\rightarrow$ non-concurrent txn
+    \item If there exists a $T_j$ is involved in two rw concurrent dependencies, abort one of $T_i, T_j, T_k$.
+    \item May result in unnecessary rollbacks due to false positives of SI anomalies.
+    \item \textbf{Theorem Non-MVSS SI Schedules:} If S is a SI schedule that is \textbf{not MVSS}, then
+    \begin{itemize}
+      \item There is at least one cycle in DSG(S), and
+      \item For each cycle in DSG(S), there exists three txns $T_i, T_j, T_k$ where
+      \includegraphics[width=0.1\textwidth]{cs3223-ssi-theorem.png}
+    \end{itemize}
+    \item \includegraphics[width=0.15\textwidth, height=0.15\textheight]{cs3223-si-anomalies-revisited.png}
+  \end{itemize}
+
+  \section{10. Crash Recovery}
+  \begin{itemize}
+    \item \textbf{Undo}: remove effects of aborted T to preserve atomicity
+    \item \textbf{Redo}: re-install effects of committed T for
+    \item Types of failure
+    \begin{itemize}
+      \item Transaction failure: T aborts
+      \item System crash: loss of volatile memory contents
+      \item Media failure: data is lost on non-volatile storage
+    \end{itemize}
+    \item Recovery manager
+    \begin{itemize}
+      \item \textbf{Commit(T)}: install T's updated pages into db
+      \item \textbf{Abort(T)}: Restore all data that T updated to prior
+      \item \textbf{Restart(T)}: Recover db to a consistent state
+      \begin{itemize}
+        \item abort all active T at the time of failure
+        \item install updates of all committed T that were not installed in db before failure
+      \end{itemize}
+      \item desiderata: little overhead and recover quickly
+    \end{itemize}
+    \item \textbf{Steal policy}: allow dirty pages updated by T to be replaced from buffer pool before T commits.
+    \begin{itemize}
+      \item No steal: poor throughput. Steal: how atomic?
+    \end{itemize}
+    \item \textbf{Force policy}: force dirty pages updated by T to written to disk when T commits
+    \begin{itemize}
+      \item poor response time but provide durability
+    \end{itemize}
+    \item \includegraphics[width=0.15\textwidth]{cs3223-steal-force.png}
+  \end{itemize}
+
   
   \section{NOTATION}
 
