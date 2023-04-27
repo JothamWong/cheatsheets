@@ -1,4 +1,4 @@
-\documentclass[9pt, landscape]{extarticle}
+\documentclass[8pt, landscape]{extarticle}
 \usepackage[scaled=0.92]{helvet}
 \usepackage{calc}
 \usepackage{multicol}
@@ -10,6 +10,9 @@
 \usepackage{enumitem}
 \usepackage[table]{xcolor}
 \usepackage{mathtools}
+\usepackage{caption}
+\usepackage{subfig}
+
 \setlist{nosep}
 % for including images
 \graphicspath{ {./images/} }
@@ -64,6 +67,7 @@
 \setlist[itemize,2]{leftmargin=4mm,labelindent=1mm,labelsep=1mm}
 \setlist[itemize,3]{leftmargin=4mm,labelindent=1mm,labelsep=1mm}
 
+\captionsetup{belowskip=0pt}
 % adding my commands
 \input{../commands/style-helpers.tex}
 
@@ -81,22 +85,21 @@
       \parbox{0.8\linewidth}{\centering \textcolor{black}{
           {\Large\textbf{CS3223}}
         \\ \normalsize{AY22/23 SEM 2}}
-        \\ {\footnotesize \textcolor{gray}{github/jovyntls}}
+        \\ {\footnotesize \textcolor{gray}{github/jovyntls github/JothamWong}}
       }%
     }
   \end{center}
-
-  \section{01. DBMS STORAGE}
-  \subsubsection{Data entry formats}
-
+  
   \begin{enumerate}
     \item k* is an actual \textbf{data record} (with search key $k$) 
     \item k* is of the form \textbf{(k, RID)} - fixed length \texttt{(k, \textbf{$\bullet$})}
     \item k* is of the form \textbf{(k, RID-list)} - e.g. (k, \{RID11, RID12\})
   \end{enumerate}
-  \section{04.1 SORTING}
 
-  \subsection{External Merge Sort}
+  \includegraphics[width=0.95\linewidth]{cs3223-notation.png} 
+  \subsection{04.1 Sorting and Selection}
+
+  \textbf{External Merge Sort}
 
   \begin{itemize}
     \item \definition{sorted run} sorted data records written to a file on disk
@@ -112,24 +115,20 @@
       \end{itemize}
   \end{itemize}
 
-  \subsubsection{optimisation with blocked I/O}
+  \textbf{optimisation with blocked I/O}
 
   \begin{itemize}
     \item sequential I/O - read/write in \textit{buffer blocks} of $b$ pages
     \item one block ($b$ pages) for output, remaining blocks for input
+    % \begin{minipage}[c]{0.6\linewidth}{\textcolor{black}{
+      %       \includegraphics[width=0.97\linewidth]{cs3223-blocked-io-mergesort.png} 
+  %   }}
+  % \end{minipage}
+    \item number of runs merged per pass, * $F = \lfloor \frac{B}{b} \rfloor -1$ 
+    \item number of passes = $\lceil \log_F(N_0) \rceil +1$
   \end{itemize}
-  \begin{minipage}[c]{0.6\linewidth}{\textcolor{black}{
-        \includegraphics[width=0.97\linewidth]{cs3223-blocked-io-mergesort.png} 
-    }}
-  \end{minipage}
-  \begin{minipage}[c]{0.35\linewidth}
-    \begin{itemize}
-      \item number of runs merged per pass, \\* $F = \lfloor \frac{B}{b} \rfloor -1$ 
-      \item number of passes = $\lceil \log_F(N_0) \rceil +1$
-    \end{itemize}
-  \end{minipage}
-
-  \subsubsection{Sorting with B$^+$-trees}
+  
+  \textbf{Sorting with B$^+$-trees}
 
   \begin{itemize}
     \item when \textit{sort key is a prefix of the index key} of the B$^+$-tree
@@ -139,7 +138,7 @@
       \end{itemize}
   \end{itemize}
 
-  \section{04.2 SELECTION: $\sigma_p(R)$}
+  \textbf{04.2 SELECTION: $\sigma_p(R)$}
 
   \begin{itemize}
     \item $\sigma_p(R)$: selects rows from relation $R$ satisfying predicate $p$
@@ -159,23 +158,19 @@
       \end{itemize}
   \end{itemize}
 
-  \subsection{Matching Predicates}
+  \textbf{Matching Predicates}
 
   \begin{itemize}
     \item \definition{term} of form $R.A \;\mathrm{op}\; c$ or $R.A_i \;\mathrm{op}\; R.A_j$
     \item \definition{conjunct} one or more terms connected by $\lor$
-      \begin{itemize}
-        \item \definition[conjunct]{disjunctive} contains $\lor$
-      \end{itemize}
-    \item conjunctive normal form, \definition{CNF predicate} comprises one or more conjuncts connected by $\land$
-      \includegraphics[width=0.95\linewidth]{cs3223-cnf-predicate.png} 
+    \item \definition{CNF predicate} comprises one or more conjuncts connected by $\land$
+      \includegraphics[width=0.80\linewidth]{cs3223-cnf-predicate.png} 
   \end{itemize}
 
-  \subsubsection{B$^+$-tree matching predicates}
+  \textbf{B$^+$-tree matching predicates}
 
   \begin{itemize}
-    \item for index $I=(K_1, K_2, \dots, K_n)$ and non-disjunctive CNF predicate $p$, $I$ matches $p$ if $p$ is of the form 
-      \includegraphics[width=0.9\linewidth]{cs3223-btree-matching-predicate.png} 
+    \item for index $I=(K_1, K_2, \dots, K_n)$ and non-disjunctive CNF predicate $p$ 
       \begin{itemize}
         \item \textit{at most one} non-equality comparison operator which must be on the last attribute of the prefix ($K_i$)
       \end{itemize}
@@ -185,16 +180,13 @@
       \end{itemize}
   \end{itemize}
 
-  \subsubsection{Hash index matching predicates}
+  \textbf{Hash index matching predicates}
 
   \begin{itemize}
-    \item for hash index $I = (K_1, K_2, \dots, K_n)$ and non-disjunctive CNF predicate $p$, $I$ matches $p$ if $p$ is of form 
+    \item for hash index $I = (K_1, K_2, \dots, K_n)$ and non-disjunctive CNF predicate $p$, all attributes must be present and all ops must be equality.
   \end{itemize}
-  \begin{tightcenter}
-    \( {\displaystyle{ \quad (K_1=c_1) \land (K_2=c_2) \land \dots \land (K_n=C_n) }} \) 
-  \end{tightcenter}
 
-  \subsection{Primary/Covered Conjuncts}
+  \textbf{Primary/Covered Conjuncts}
 
   \begin{itemize}
     \item \definition{primary conjuncts} subset of conjuncts that $I$ matches
@@ -209,11 +201,11 @@
     \item primary conjuncts $\subseteq$ covered conjuncts
   \end{itemize}
 
-  \subsection{Cost of Evaluation}
+  \textbf{Cost of Evaluation}
 
   let $p'$ = primary conjuncts of $p$, $\quad p_c$ = covered conjuncts of $p$
 
-  \subsubsection{B$^+$-tree index evaluation of p}
+  \textbf{B$^+$-tree index evaluation of p}
 
   \begin{enumerate}
     \item navigate internal nodes to find first leaf page
@@ -247,7 +239,7 @@
       \end{itemize}
   \end{enumerate}
 
-  \subsubsection{hash index evaluation of p}
+  \textbf{hash index evaluation of p}
 
   \begin{itemize}
     \item \textbf{format-1}: $\quad$ cost to retrieve data records $ \geq \lceil\frac{||\sigma_{p'}(R)||}{b_d}\rceil $
@@ -258,15 +250,15 @@
   \end{itemize}
 
 
-  \section{05.1 PROJECTION $\pi_{A_1, \dots, A_m}(R)$}
+  \subsection{05. PROJECTION $\pi_{A_1, \dots, A_m}(R)$ AND JOIN}
 
   \begin{itemize}
     \item $\pi_L(R)$ eliminates duplicates, $\pi^*_L(R)$ preserves duplicates
   \end{itemize}
 
-  \subsection{Sort-based approach}
+  \textbf{Sort-based approach}
 
-  \includegraphics[width=0.95\linewidth]{cs3223-projection-sort-approach.png} 
+  % \includegraphics[width=0.95\linewidth]{cs3223-projection-sort-approach.png} 
 
   \textbf{cost analysis}
 
@@ -278,7 +270,7 @@
 
   \textbf{optimised sort-based approach}
 
-  \includegraphics[width=0.8\linewidth]{cs3223-projection-sort-approach-optimised.png} 
+  % \includegraphics[width=0.8\linewidth]{cs3223-projection-sort-approach-optimised.png} 
 
   \begin{itemize}
     \item if $B>\sqrt{|\pi^*_L(R)|}$, same I/O cost as hash-based approach
@@ -288,7 +280,7 @@
       \end{itemize}
   \end{itemize}
 
-  \subsection{Hash-based approach}
+  \textbf{Hash-based approach}
 
   \begin{enumerate}
     \item \textbf{partitioning phase}: hash each tuple $t \in R$ 
@@ -306,8 +298,8 @@
         \item write tuples in hash table to results
       \end{itemize}
   \end{enumerate}
-  \includegraphics[width=0.4\linewidth]{cs3223-projection-hash-1.png} 
-  \includegraphics[width=0.5\linewidth]{cs3223-projection-hash-2.png} 
+  % \includegraphics[width=0.4\linewidth]{cs3223-projection-hash-1.png} 
+  % \includegraphics[width=0.5\linewidth]{cs3223-projection-hash-2.png} 
 
   \begin{itemize}
     \item \textbf{I/O cost} (no partition overflow): $|R| + 2|\pi^*_L(R)|$
@@ -321,11 +313,11 @@
           \begin{itemize}
             \item  approximately $B> \sqrt{f\times |\pi^*_L(R)|}$
           \end{itemize}
-          \includegraphics[width=0.9\linewidth]{cs3223-projection-hash-partition-overflow.png} 
+          % \includegraphics[width=0.9\linewidth]{cs3223-projection-hash-partition-overflow.png} 
       \end{itemize}
   \end{itemize}
 
-  \subsection{Projection using Indexes}
+  \textbf{Projection using Indexes}
 
   \begin{itemize}
     \item if index search key contains all wanted attributes \textit{as a prefix}
@@ -334,13 +326,13 @@
       \end{itemize}
   \end{itemize}
 
-  \section{05.2 JOIN $R \bowtie_\theta S$}
+  \textbf{05.2 JOIN $R \bowtie_\theta S$}
 
   $R$ = outer relation (smaller relation); $\quad S$ = inner relation
 
   \attention for \textbf{format-2} index, add cost of retrieving record
 
-  \subsection{nested loop joins}
+  \textbf{nested loop joins}
 
   \begin{itemize}
     \item \textbf{tuple-based} nested loop join: $|R| + ||R|| \times |S|$
@@ -357,7 +349,7 @@
       \end{itemize}
   \end{itemize}
 
-  \subsection{sort-merge join}
+  \textbf{sort-merge join}
 
   \begin{itemize}
     \item sort R \& S: $2|R| (\log_m(N_R)+1) + 2|S| (\log_m(N_S)+1)$
@@ -375,7 +367,7 @@
       \end{itemize}
   \end{itemize}
 
-  \subsection{hash join}
+  \textbf{hash join}
 
   \begin{enumerate}
     \item partition $R$ and $S$ into $k$ partitions on join column
@@ -387,7 +379,7 @@
     \item join corresponding partitions: $R \bowtie_{R.A=S.B} S = (R_1 \bowtie S_1) \cup \dots \cup (R_k \bowtie S_k)$
   \end{enumerate}
 
-  \subsubsection{Grace hash join}
+  \textbf{Grace hash join}
 
   for \textit{build relation} $R$ and \textit{probe relation} $S$,
   \begin{enumerate}
@@ -410,7 +402,7 @@
       \end{itemize}
   \end{itemize}
 
-  \subsection{General join conditions}
+  \textbf{General join conditions}
 
   \begin{itemize}
     \item \textbf{multiple equality-join} conditions: $(R.A = S.A) \land (R.B=S.B)$
@@ -427,7 +419,7 @@
       \end{itemize}
   \end{itemize}
 
-  \section{06. Query Evaluation \& Optimization}
+  \subsection{06. Query Evaluation \& Optimization}
 
   \begin{itemize}
     \item Set operations can be implemented with joins and sort/hash
@@ -448,17 +440,12 @@
       \item Use index scan on covering index whenever possible.
     \end{itemize}
     \item Group by: Partition by grp attr and run normal aggregation.
-  \end{itemize}
-
-  \textbf{Query Evaluation}
-
-  \begin{itemize}
-    \item Materialized evaluation
+    \item \textbf{Materialized evaluation}
     \begin{itemize}
       \item Evaluate operator only when all operands are evaluated or materialized.
       \item Intermediate results are written to disk which can be costly.
     \end{itemize}
-    \item Pipelined evaluation
+    \item \textbf{Pipelined evaluation}
     \begin{itemize}
       \item Execution of operators is interleaved. Pipelining may not always be possible. 
       \item Temporary relations are not stored on disk.
@@ -473,14 +460,10 @@
         \item \textbf{close}: Deallocate state information
       \end{itemize}
     \end{itemize}
-  \end{itemize}
-  
-  \textbf{Query Planning}
-
-  \begin{itemize}
     \item A SQL query has many equiv logical plans, which have many equiv physical plans
     \item Query optimization is about avoiding the worst plans, not picking the best
     \item Relational Algebra Equiv rules
+  \end{itemize}
     \begin{enumerate}
       \item Commutativity of binary ops
       \begin{enumerate}
@@ -515,55 +498,55 @@
         \item $\pi_L(R \cup S) \equiv \pi_L (R) \cup \pi_L (S)$
       \end{enumerate}
     \end{enumerate}
-    \item Summary of RA optimization
-    \begin{enumerate}
-      \item Perform selection as early as possible, ideally before joins.
-      \item Replace Cartesian Product by join whenever possible
-      \item Project out useless attributes early
-      \item If there are several joins, perform most restrictive join first.
-    \end{enumerate}
-    \item Types of Query Plan Trees
     \begin{itemize}
-      \item A query plan is \textbf{linear} if at least one operand for each join op is a base relation, else it is \textbf{bushy}
-      \item A linear plan is \textbf{left-deep} if every right operand is a base relation
-      \item A linear plan is \textbf{right-deep} if every left operand is a base relation
-    \end{itemize}  
-    \item Query plan enumeration, assume that optimal sol to smaller set is optimal sol to larger set. may not be true.
-    \item \includegraphics[width=0.18\textwidth]{cs3223-query-enumeration-algo.png}
-    \item System R optimizer
-    \begin{itemize}
-      \item Enumerate only left-deep query plans. (too much to search o/w)
-      \item Avoid cross-product query plans.
-      \item Consider early selections and projections.
-      \item Uses $dp(S_i, o_i)$ where $o_i$ is null if unordered or a sequence of attrs
-      \item May be cheaper if a SMJ is sorted on some sequence even if by itself is suboptimal. 
+      \item Summary of RA optimization
+      \begin{enumerate}
+        \item Perform selection as early as possible, ideally before joins.
+        \item Replace Cartesian Product by join whenever possible
+        \item Project out useless attributes early
+        \item If there are several joins, perform most restrictive join first.
+      \end{enumerate}
+      \item Types of Query Plan Trees
+      \begin{itemize}
+        \item A query plan is \textbf{linear} if at least one operand for each join op is a base relation, else it is \textbf{bushy}
+        \item A linear plan is \textbf{left-deep} if every right operand is a base relation
+        \item A linear plan is \textbf{right-deep} if every left operand is a base relation
+      \end{itemize}  
+      \item Query plan enumeration, assume that optimal sol to smaller set is optimal sol to larger set. may not be true.
+      \item DP algorithm for query enumeration: Calculate optimal plan for all single relations. Calculate optimal plan involving 2, 3 and so on relations by finding best way to join each smaller relation.
+      \item System R optimizer
+      \begin{itemize}
+        \item Enumerate only left-deep query plans. (too much to search o/w)
+        \item Avoid cross-product query plans.
+        \item Consider early selections and projections.
+        \item Uses $dp(S_i, o_i)$ where $o_i$ is null if unordered or a sequence of attrs
+        \item May be cheaper if a SMJ is sorted on some sequence even if by itself is suboptimal. 
+      \end{itemize}
+      \item Cost estimation
+      \begin{itemize}
+        \item Uniformity assumption: uniform distribution
+        \item Independence assumption: diff attrs are independent
+        \item Inclusion assumption: For $R \bowtie_{R.A = S.B} S$, if $\lVert{\pi_A (R)}\lVert \leq \lVert{\pi_B (S)}\lVert$ then $\pi_A (R) \subseteq \pi_B(S)$
+      \end{itemize}
+      \item \textbf{Size estimation}: $\lVert q \lVert \approx \lVert e \lVert \times \prod_{i=1}^{n}rf(t_i)$
+      \begin{itemize}
+        \item $rf(t_i) = \frac{\lVert \sigma_i(e)\lVert}{\lVert e \lVert}$, reduction/selectivity factor
+        \item $rf(R=c) = \frac{\lVert c \lVert}{\lVert R \lVert}$ uniformity assumption
+      \end{itemize}
+      \item \textbf{Join selectivity}: $rf(R.A = S.B) = \frac{\lVert R \bowtie_{R.A = S.B} \lVert}{\lVert R \lVert \times \lVert S \lVert}$
+      \begin{itemize}
+        \item Inclusion assumption: Assume that $\lVert \pi_A(R) \lVert \leq \lVert \pi_B(S) \lVert$
+        \item By uniformity assumption, every R-tuple joins with $\frac{\lVert S \lVert}{\lVert \pi_B(S) \lVert}$
+        \item $\therefore rf(R.A = S.B) \approx \frac{1}{\max(\lVert \pi_A(R) \lVert, \lVert \pi_B(S) \lVert)}$ 
+      \end{itemize}
+      \item Using histograms. Partition domain into sub-ranges (\textbf{buckets}) and assume uniform value distribution within each bucket.
+      \begin{itemize}
+        \item \textbf{Equiwidth}: Each bucket has almost equal num values
+        \item \textbf{Equidepth}: Each bucket has almost equal num tuples, sub-range of adj buckets can overlap
+        \item \textbf{MCV}: Keep track of exact top-k common values and exclude from buckets 
+      \end{itemize}
     \end{itemize}
-    \item Cost estimation
-    \begin{itemize}
-      \item Uniformity assumption: uniform distribution
-      \item Independence assumption: diff attrs are independent
-      \item Inclusion assumption: For $R \bowtie_{R.A = S.B} S$, if $\lVert{\pi_A (R)}\lVert \leq \lVert{\pi_B (S)}\lVert$ then $\pi_A (R) \subseteq \pi_B(S)$
-    \end{itemize}
-    \item \textbf{Size estimation}: $\lVert q \lVert \approx \lVert e \lVert \times \prod_{i=1}^{n}rf(t_i)$
-    \begin{itemize}
-      \item $rf(t_i) = \frac{\lVert \sigma_i(e)\lVert}{\lVert e \lVert}$, reduction/selectivity factor
-      \item $rf(R=c) = \frac{\lVert c \lVert}{\lVert R \lVert}$ uniformity assumption
-    \end{itemize}
-    \item \textbf{Join selectivity}: $rf(R.A = S.B) = \frac{\lVert R \bowtie_{R.A = S.B} \lVert}{\lVert R \lVert \times \lVert S \lVert}$
-    \begin{itemize}
-      \item Inclusion assumption: Assume that $\lVert \pi_A(R) \lVert \leq \lVert \pi_B(S) \lVert$
-      \item By uniformity assumption, every R-tuple joins with $\frac{\lVert S \lVert}{\lVert \pi_B(S) \lVert}$
-      \item $\therefore rf(R.A = S.B) \approx \frac{1}{\max(\lVert \pi_A(R) \lVert, \lVert \pi_B(S) \lVert)}$ 
-    \end{itemize}
-    \item Using histograms. Partition domain into sub-ranges (\textbf{buckets}) and assume uniform value distribution within each bucket.
-    \begin{itemize}
-      \item \textbf{Equiwidth}: Each bucket has almost equal num values
-      \item \textbf{Equidepth}: Each bucket has almost equal num tuples, sub-range of adj buckets can overlap
-      \item \textbf{MCV}: Keep track of exact top-k common values and exclude from buckets 
-    \end{itemize}
-  \end{itemize}
-
-  \section{07. Transaction}
+  \subsection{07. Transaction}
 
   \begin{itemize}
     \item An active Xact is a Xact still in progress
@@ -574,8 +557,6 @@
     \item We say that $T_i$ performs the final write on $O$ in a schedule S if the last write on O is $W_i(O)$
     \item An interleaved Xact schedule is \textbf{correct} if it is "equivalent" to some serial schedule over the set of Xacts 
   \end{itemize}
-
-  \subsection{View Serializable Schedules (VS)}
   
   Two schedules $S$ and $S'$ (over the same set of Xacts) are \textbf{view equivalent} denoted by $S \equiv_v S'$ if they satisfy:
 
@@ -586,15 +567,15 @@
 
   A schedule S is a \textbf{view serializable schedule (VS)} if S is view equivalent to some serial schedule over the same set of Xacts
 
-  \subsection{Anomalies due to interleaved schedules}
-  Two actions on the same object \textbf{conflict} if
-  
+  We can also construct a directed VSG(S) to capture read-from and final-write relations among Txn. Each node in VSG repr a Txn with the following edges
   \begin{enumerate}
-    \item at least one is a write action,
-    \item the actions are from different Xacts 
+    \item $(T_j, T_i)$ if $T_i$ reads from $T_j$
+    \item $(T_j, T_i)$ if both $T_i$ and $T_j$ update the same O and $T_i$ does final write on O
+    \item $(T_j, T_i)$ if $T_j$ read O from initial db and $T_i$ update O
   \end{enumerate}
+  If VSG(S) is cyclic, then S is not VSS. If VSG(S) is acylic, then S is VSS iff there exists a serial schedule produced from a topo ordering of VSG(S) that is view equivalent to S.
 
-  The following are anomalies:
+  Two actions on the same O \textbf{conflict} if at least one is a W and both are from diff Xacts
   
   \begin{enumerate}
     \item Dirty read (due to WR conflicts)
@@ -622,7 +603,6 @@
     \end{itemize}
   \end{enumerate}
 
-  \subsection{Conflict Serializable (CS)}
   \begin{itemize}
     \item \textbf{conflict equivalent} denoted by $S \equiv_c S'$ if they order every pair of conflicting actions of two \textbf{committed} Xacts in the same way.
     \item \textbf{conflict serializable schedule (CS)} if it is conflict equivalent to a serial schedule over the same set of Xacts.
@@ -638,7 +618,6 @@
     \item \textbf{Theorem}: If S is \textbf{VS} and S has no blind writes, then S is also \textbf{CS}.
   \end{itemize}
 
-  \subsection{Recovery}
   \begin{itemize}
     \item \textbf{Cascading abort}: For correctness, if $T_i$ read from $T_j$ then $T_i$ must abort if $T_j$ aborts. We say that $T_j$'s abort is cascaded to $T_i$.
     \item \textbf{Recoverable schedule}: For every Xact T that commits in S, $T$ must commit after $T'$ if $T$ reads from $T'$.
@@ -657,14 +636,8 @@
     \item \textbf{Theorem}: $\text{Strict} \subsetneq \text{Cascadeless} \subsetneq \text{Recoverable}$.
   \end{itemize}
 
-  \section{08. Concurrency Control}
-  \subsection{Transaction Scheduler}
-  For each input action (R, W, C, A) to the scheduler, 
-  \begin{itemize}
-    \item output action to S
-    \item Postpone action by blocking Xact
-    \item Reject action and abort Xact
-  \end{itemize}
+  \subsection{08. Concurrency Control}
+  \textbf{Transaction Scheduler}: For each input action (R, W, C, A) to the scheduler, either output action to S, postpone(block Xact) or reject (abort Xact)
 
   \textbf{Lock-Based concurrency control}
   \includegraphics[width=0.4\linewidth]{cs3223-lock-matrix.png}
@@ -693,11 +666,8 @@
     \item \textbf{Theorem:} Strict 2PL S are strict and CS.
   \end{itemize}
 
-  \textbf{Lock Management}
-  \textbf{Deadlock}: cycle of T waiting for locks to be released by each other.
-  \subsection{Deadlock Detection}
   \begin{itemize}
-    \item \textbf{Waits-for graph (WFG)}
+    \item \textbf{Deadlock Detection: Waits-for graph (WFG)}
     \begin{itemize}
       \item Nodes represent active T.
       \item Add edge $T_i \rightarrow T_j$ if $T_i$ waiting for $T_j$ to release lock.
@@ -707,16 +677,13 @@
     \item Break deadlock by aborting a T in the cycle.
     \item Alternative: timeout.
   \end{itemize}
-
-  \subsection{Deadlock Prevention}
   \begin{itemize}
-    \item Older T have higher priority than younger T
+    \item \textbf{Deadlock Prevention}: Older T have higher priority than younger T
     \begin{itemize}
-      \item Each T is assigned timestamp when started. 
-      \item Older T has a smaller timestamp.
+      \item Each T is assigned ts when started. Older T has a smaller ts.
     \end{itemize}
     \item Suppose $T_i$ requests for a lock that conflicts with a lock held by $T_j$
-    \item \includegraphics[width=0.19\textwidth]{cs3223-deadlock-prevention.png}
+    \item \includegraphics[width=0.15\textwidth]{cs3223-deadlock-prevention.png}
     \item Wait-die policy
     \begin{itemize}
       \item non-preemptive: only requesting T can be aborted
@@ -727,8 +694,7 @@
     \item To avoid starvation, a restarted T must use original timestamp
   \end{itemize}
 
-  \subsection{Lock Conversion}
-  Increases concurrency by allowing lock conversions, previously serial only schedules can become interleaved.
+  \textbf{Lock Conversion} Increases concurrency by allowing lock conversions, previously serial only schedules can become interleaved.
   \begin{itemize}
     \item $\text{UG}_i(A):$ $T_i$ upgrades S on A to X.
     \begin{itemize}
@@ -741,21 +707,18 @@
     \end{itemize}
   \end{itemize}
 
-  \subsection{Lock-based Isolation levels}
-  \includegraphics[width=0.20\textwidth]{cs3223-isolation-level.png}
+  \textbf{Lock-based Isolation levels}
+
+  \includegraphics[width=0.2486\textwidth]{cs3223-isolation-levels.png} 
   \begin{itemize}
     \item \textbf{Short duration} lock acquired for an operation can be released after operation ends before T commits/abort
     \item \textbf{Long duration} lock acquired for an operation is held until T commits/abort
-  \end{itemize}
-
-  \textbf{Lock Granularity}
-  \begin{itemize}
-    \item Highest(coarsest) to lowest(finest): db, relation, page, tuple
+    \item \textbf{Lock Granularity}: Highest(coarsest) to lowest(finest): db, relation, page, tuple
     \item If T holds M on D, T implicitly holds M on granules finer than D.
     \item \textbf{Protocol}: Before acquiring S/X on G, acquire IS/IX on granules coarser than G top-down. Release locks bottom-up.
   \end{itemize}
 
-  \section{09. MVCC}
+  \subsection{09. MVCC}
   \begin{itemize}
     \item $W_i(O_i): $ create new version of O denoted by $O_i$. $O_0$ is initial version.
     \item $R_i(O_j): $ read an appropriate version of O
@@ -763,7 +726,6 @@
     \item Read-only T never aborted
   \end{itemize}
 
-  \subsection{Multiversion Schedule}
   \begin{itemize}
     \item \textbf{Multiversion view equivalent (MVE)} denoted by $S \equiv_{mv} S'$ if they have the same set of reads-from.
     \item $R_i(x_j)$ occurs in S iff $R_i(x_j)$ also occurs in S'
@@ -772,8 +734,8 @@
     \item To show not MVSS, suppose there exists a S' and show that there is a cycle in the precede graph.
   \end{itemize}
 
-  \subsection{MVCC Protocol: Snapshot Isolation (SI)}
   \begin{itemize}
+    \item \textbf{MVCC Protocol: Snapshot Isolation (SI)}
     \item Each T has two timestamps $start(T)$ and $commit(T)$
     \item Each T sees a snapshot of DB that consists of updates by T' that committed before T starts
     \item T and T' are \textbf{concurrent} if they overlap
@@ -795,17 +757,16 @@
       \item If T' aborts, then assume T is granted X on O. If O has been updated by any concurrent T'', T aborts. Otherwise T proceeds.
       \item If T' commits, then T is aborted.
     \end{itemize}
-    \item When T commits/aborts, releases its X-lock(s).
+    \item (FUW): When T commits/aborts, releases its X-lock(s).
     \item \textbf{Garbage collection} A version $O_i$ may be deleted if there exists a newer version $O_j$ commit($T_i$) $<$ commit($T_j$) s.t for every \textbf{active} $T_k$ that started after $T_i$ committed, we have commit($T_j$) $<$ start($T_k$)
     \item SI has similar performance to Read Committed but SI does not suffer from lost update or unrepeatable reads.
-    \item But SI is vulnerable to non-serializable executions such as \textbf{write-skew anomaly} (left pic) and \textbf{read-only txn anomaly} (right pic). Both pics are SI S that isnt MVSS
-    \item SI also does not guarantee serializability.
-    \item \includegraphics[width=0.4\linewidth]{cs3223-write-skew-anomaly.png} \includegraphics[width=0.4\linewidth]{cs3223-read-only-txn-anomaly.png}
+    \item But SI is vulnerable to non-serializable executions such as \textbf{write-skew anomaly} (left pic) and \textbf{read-only txn anomaly} (middle pic). Both pics are SI S that isnt MVSS
+    \item SI also does not guarantee serializability. The rightmost picture shows the DSG for both anomalies (S1 = write-skew, S2 = read-only)
   \end{itemize}
+  \includegraphics[width=0.2\linewidth]{cs3223-write-skew-anomaly.png} \includegraphics[width=0.25\linewidth]{cs3223-read-only-txn-anomaly.png} \includegraphics[width=0.4\linewidth]{cs3223-si-anomalies-revisited.png}
 
-  \subsection{Serializable Snapshot Isolation (SSI)}
   \begin{itemize}
-    \item Stronger protocol that guarantees serializable SI schedules.
+    \item \textbf{Serializable Snapshot Isolation (SSI)}: Guarantees serializable SI schedules.
     \item Transactional dependencies
     \begin{itemize}
       \item $T_1 \dashrightarrow_{ww} T_2$: $T_1$ writes a version of x. $T_2$ later writes \textbf{immediate successor} of x.
@@ -825,47 +786,169 @@
       \item For each cycle in DSG(S), there exists three txns $T_i, T_j, T_k$ where
       \includegraphics[width=0.1\textwidth]{cs3223-ssi-theorem.png}
     \end{itemize}
-    \item \includegraphics[width=0.15\textwidth, height=0.15\textheight]{cs3223-si-anomalies-revisited.png}
   \end{itemize}
 
-  \section{10. Crash Recovery}
+  \subsection{10. Crash Recovery}
   \begin{itemize}
-    \item \textbf{Undo}: remove effects of aborted T to preserve atomicity
-    \item \textbf{Redo}: re-install effects of committed T for
     \item Types of failure
     \begin{itemize}
       \item Transaction failure: T aborts
       \item System crash: loss of volatile memory contents
       \item Media failure: data is lost on non-volatile storage
     \end{itemize}
-    \item Recovery manager
-    \begin{itemize}
-      \item \textbf{Commit(T)}: install T's updated pages into db
-      \item \textbf{Abort(T)}: Restore all data that T updated to prior
-      \item \textbf{Restart(T)}: Recover db to a consistent state
-      \begin{itemize}
-        \item abort all active T at the time of failure
-        \item install updates of all committed T that were not installed in db before failure
-      \end{itemize}
-      \item desiderata: little overhead and recover quickly
-    \end{itemize}
+    \item \textbf{Recovery manager}: Supports Commit, Abort and Restart (abort all losers, and install updates from committed T not written to disk)
+    \item desiderata: little overhead and recover quickly
     \item \textbf{Steal policy}: allow dirty pages updated by T to be replaced from buffer pool before T commits.
     \begin{itemize}
       \item No steal: poor throughput. Steal: how atomic?
     \end{itemize}
     \item \textbf{Force policy}: force dirty pages updated by T to written to disk when T commits
     \begin{itemize}
+    
       \item poor response time but provide durability
     \end{itemize}
-    \item \includegraphics[width=0.15\textwidth]{cs3223-steal-force.png}
+    \item \includegraphics[width=0.12\textwidth]{cs3223-steal-force.png}
   \end{itemize}
+\begin{itemize}
+  \item \includegraphics[scale=0.15]{cs3223-aries-three-phases.png}
+  \item \textbf{Log} Sequential file of records in \textbf{non-volatile/stable storage} (multi copies)
+  \begin{itemize}
+    \item LSN: unique identifier, LSN of an earlier log record $<$ later log record
+    \item type of log record (update, commit, abort)
+    \item identifier of Xact
+    \item pageID: what page is modified 
+    \item prevLSN: LSN of the previous log record for same Xact
+    \item undoNextLSN: See CLR
+  \end{itemize}
+  \item \textbf{Update log record}
+  \begin{itemize}
+    \item id of page being updated, byte offset within page indicating when updated portion start, length: number of byes for updated portion of page
+    \item before-image and after-image of update
+  \end{itemize}
+  \item \textbf{Compensation Log Record (CLR)}
+  \begin{itemize}
+    \item When an update (described by a log record) is undone, create a CLR. Track action taken to undo update.
+    \item undoNextLSN = LSN of next log record to be undone (this skips over the undone action in the LL) 
+  \end{itemize}
+  \item \textbf{Abort log record}: When Xact is to be aborted, start undoing this Xact.
+  \item \textbf{End log record}: When the extra processing for aborted/committed Xact is done
+  \item \textbf{Checkpoint log record}: See checkpointing
+  \item \textbf{Transaction Table (TT)}
+  \begin{itemize}
+    \item One entry for each \textbf{active Txn} which contains
+    \begin{itemize}
+      \item XactID
+      \item lastLSN: LSN of most \textbf{recent} log record for this Xact
+      \item Xact status (C = committed or U = has not committed)
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{Dirty Page Table (DPT)}
+  \begin{itemize}
+    \item One entry for each \textbf{dirty page} in buffer pool which contains
+    \begin{itemize}
+      \item pageID: page ID of dirty page
+      \item recLSN: LSN of the \textbf{earliest} log record for an update that dirtied page
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{Write-ahead logging (WAL) protocol}
+  \item Uncommitted update to db not flushed til log with before-image is flushed.
+  \item Each db page contains LSN of most recent log record (\textbf{pageLSN}) that describes update to the page. Before flushing db page p to disk, ensure that all log r' up to log r corresponding to p's pageLSN has been flushed.
+  \item \textbf{Force-at-commit protocol}
+  \item Do not commit a Xact until after-images of all its updated records are in stable storage (db or log). Enforced by writing a \textbf{commit log record} r for Xact and flushing all log records (up to and including r) for Xact to disk.
+  \item An Xact is considered committed if its commit log is written to stable storage
+  \item \textbf{Simple checkpointing}
+  \item Stop accepting any new update, commit and abort ops.
+  \item Wait till all active update, commit and abort ops are done.
+  \item Flush all dirty pages in buffer.
+  \item Write a checkpoint log record containing Xact table.
+  \item Resume accepting new update, commit and abort.
+  \item Analysis phase finds latest checkpoint log and resumes from there, init Xact to checkpoint and DPT to empty.
+  \item \textbf{Fuzzy checkpointing}: Used by ARIES in analysis start up.
+  \item Write begin checkpoint log record (BCPLR).
+  \item Write end checkpoint log record (ECPLR) containing current DPT and TT.
+  \item Write a master record containing LSN of begin checkpoint to stable storage.
+  \item We assume there are no log records between BCPLR and ECPLR.
+\end{itemize}
 
-  
-  \section{NOTATION}
+  \textbf{ARIES: Analysis}
+  \begin{enumerate}
+    \item Retrieve begin checkpoint log record (BCPLR) identified by master record
+    \item Retrieve end checkpoint log record (ECPLR) corresponding to BCPLR
+    \begin{itemize}
+      \item We assume there are no log records between BCPLR and ECPLR
+    \end{itemize}
+    \item Initialize DPT and TT using ECPLR's contents
+    \item Scan log record in forward direction to process each record r
+    \item If r is an \textbf{end log record}
+    \begin{itemize}
+      \item Remove T from TT
+    \end{itemize}
+    \item Else
+    \begin{itemize}
+      \item Add an entry in TT for T if T is not in TT
+      \item Update lastLSN of entry T to be r's LSN
+      \item Update status of entry T to C if r is a commit log record
+    \end{itemize}
+    \item If (r is a redoable log record for page P) and (P is not in DPT) then
+    \begin{itemize}
+      \item Create entry for P in DPT with pageID = P's pageID, recLSN = r's LSN
+    \end{itemize}
+    \item At the end of Analysis, 1) TT = list of all active Txn at time of crash, 2) DPT = \textbf{superset} of dirty pages at time of crash
+  \end{enumerate}
 
+  \textbf{ARIES: Redo}
+  \begin{enumerate}
+    \item Set \textbf{RedoLSN} = smallest recLSN among all dirty pages in DPT
+    \item Let $r$ be the log record with LSN = RedoLSN
+    \item Scan the log in forward dir starting from $r$
+    \item If (r is a \textbf{redoable} (update or CLR) log record) and (condition C is false)
+    \begin{itemize}
+      \item Fetch page P associated with r (this requires a page access!!!)
+      \item If (P's pageLSN $<$ r's LSN) then
+      \begin{itemize}
+        \item Reapply logged action in r to P
+        \item update P's pageLSN = r's LSN
+      \end{itemize}
+      \item Else
+      \begin{itemize}
+        \item Update P's entry in DPT: recLSN = P's pageLSN + 1
+      \end{itemize}
+    \end{itemize}
+    \item At the end of Redo Phase, 1) Create \textbf{end log records} for Xacts with status = C in TT and remove them from TT, 2) System is restored to state at time of crash. (Still have losers)
+    \item \textbf{Condition C}: (P is not in DPT) or (P's recLSN in DPT $>$ r's LSN)
+  \end{enumerate}
 
-  \includegraphics[width=0.97\linewidth]{cs3223-notation.png} 
-
+  \textbf{ARIES: Undo}
+  \begin{enumerate}
+    \item Abort losers (active Xacts at time of crash) by undoing action in reverse order
+    \item Initialize L = set of lastLSNs (with status = U) from TT
+    \item Repeat until L becomes empty
+    \begin{enumerate}
+      \item Delete largest lastLSN from L
+      \item Let r be the corresponding log record
+      \item If r is an \textbf{update log record} for T on page P
+      \begin{enumerate}
+        \item Create a CLR $r_2$ for T: $r_2$'s undoNextLSN = r's prevLSN and prevLSN = T's lastLSN in TT
+        \item Update T's entry in TT: lastLSN = $r_2$'s LSN
+        \item Undo logged action on page P (WAL principle)
+        \item update P's pageLSN = $r_2$'s LSN
+        \item $Update-L-and-TT$(r's prevLSN) 
+      \end{enumerate}
+      \item else if r is a \textbf{CLR} for T then 
+      \begin{enumerate}
+        \item $Update-L-and-TT$(r's undoNextLSN)
+      \end{enumerate} 
+      \item else if r is an \textbf{abort log record}
+      \begin{enumerate}
+        \item $Update-L-and-TT$(r's prevLSN)
+      \end{enumerate}
+      \item \textbf{def} $Update-L-and-TT$(lsn)
+      \begin{enumerate}
+        \item if lsn is not null then add lsn to L
+        \item else create an \textbf{end log record} for T and remove T from TT
+      \end{enumerate}
+    \end{enumerate}
+  \end{enumerate}
 
 \end{multicols*}
 
